@@ -5,16 +5,17 @@ target=$(readlink -f "$1")
 snapshot_dir="/.zfs/snapshot"
 
 zfs_root() {
-  t=$1
-  while [ ! -d "$t/.zfs" ] ; do
+  t="$1"
+  while [ ! -d "$t/.zfs/snapshot" ] ; do
     t="${t%/*}"
   done
   echo "$t"
 }
 zfsroot="$(zfs_root $target)"
 subpath="${target#$zfsroot}"
+escaped_subpath=$(echo $subpath | sed "s|\[|\\\[|g" | sed "s|\]|\\\]|g")
 
-selected=$(ls -d "$zfsroot$snapshot_dir/"*"$subpath" | sed "s|$zfsroot$snapshot_dir/\(.*\)$subpath|\1|" | sort -r | fzf)
+selected="$(ls -d "$zfsroot$snapshot_dir/"*"$subpath" | sed "s|$zfsroot$snapshot_dir/\(.*\)$escaped_subpath|\1|" | sort -r | fzf)"
 
 read -p "Restore $target from $selected snapshot? [N] " reply
 case "$reply" in
